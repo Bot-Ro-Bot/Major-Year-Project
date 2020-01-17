@@ -1,1 +1,7 @@
 # Major-Year-Project
+
+A Major Project On "Human-Computer Interaction using Neuromuscular Signals"
+
+This project is about designing a Brain Computer Interface (BCI) that reads Electromyographic signals from different parts of Peripheral Nervous System (PNS). The signal is perceived from different muscles of articulatory system that is associated with internal articulation of voice commands delivered by the brain. The signal in the range of microvolt is amplified to volts and error occurred due to movements of other muscles than muscles involved in internal articulation is filtered using instrumentation amplifiers in two steps combined with high pass and low pass filters. Amplifiers and filters are embedded in a printed circuit board along with Arduino and Bluetooth module for remote communication. Signals are converted to digital using ramp type analog to digital conversion (ADC) which is inbuilt in Arduino. The signal sent to remote computer is received at receiving side using a Bluetooth module and Arduino. At receiving side the signal is sent to a computer using Universal Asynchronous Receiver/Transmitter (UART) protocol. Then the computer decodes the signal using AI running in Python programming language. Trained models in python uses artificial intelligence (AI) to predict what the user want to speak and finally the information of the signal i.e. English alphabet, is displayed on the computer screen. 
+
+Team Members: Rabin Nepal, Rhimesh Lwagun, Sanjay Rijal, Upendra Subedi
