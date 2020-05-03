@@ -17,6 +17,8 @@
 
 //sampling period in microseconds (250 Hz)
 #define samplePeriod 4000
+#define smoothRate 0.97
+#define normalization 1024
 
 //pins allocated to different channels
 #define channel1 A0   //muscle name
@@ -26,8 +28,12 @@
 #define channel5 A4   //muscle name
 #define channel6 A5   //muscle name
 
+//pin for led so verify that the code interrupt is running
+#define LED 13
+
 //variables to store all the raw analog data
-uint16_t channel[7];
+uint16_t channel[7];  //channel 0 is the time stamp of the signal for phase correction and test signal for wireless communication for testing purposes
+uint16_t channelOld[7];  //
 
 //variable to see the time consumed by the adc to read all 6 channels
 long int looptime = 0;
@@ -40,9 +46,33 @@ void readData(void) {
   channel[4] = analogRead(channel4);
   channel[5] = analogRead(channel5);
   channel[6] = analogRead(channel6);
-
-  //AVR wala code heroman ley lekhnu hunxa hai yedi chahiyo bhanes
+  digitalWrite(LED, 1 ^ digitalRead(LED));
+  //AVR wala code heroman ley lekhnu hunxa hai yedi chahiyo bhane
 }
+
+
+//function to send data to computer via bluetooth (master device)
+void sendData() {
+  for (int i = 0; i < 7; i++) {
+    Serial.write(channel[i]);
+    Serial.write(','); //each value separated by comma 
+  }  
+  Serial.write('#'); //end character sent after each chunk of data sent
+}
+
+//normalize the data with respect to the maximum amplitude seen at a time frame
+void normalizeData() {
+  for (int i = 1; i < 7; i++) {
+    channel[i] = channel[i] / normalization;
+  }
+}
+
+//use exponential time average filter to smoothen the data
+void smoothData() {
+  for (int i = 1; i < 7; i++) {
+    channel[i] = channel[i] * smoothRate + (1 - smoothRate) * channelOld[i];
+    channelOld[i] = channel[i];
+  }}
 
 void setup() {
   pinMode(channel1, INPUT);
@@ -51,15 +81,19 @@ void setup() {
   pinMode(channel4, INPUT);
   pinMode(channel5, INPUT);
   pinMode(channel6, INPUT);
-  //  Timer1.initialize(samplePeriod);
-  //  Timer1.attachInterrupt(readData);
+  pinMode(LED, OUTPUT);
+  Timer1.initialize(samplePeriod);
+  Timer1.attachInterrupt(readData);
   Serial.begin(115200);
 }
 
 
 void loop() {
-  looptime = micros();
+  //looptime = micros();
   //  readData();
-  Serial.println(".");
-  Serial.println(micros() - looptime);
+  //Serial.println(micros() - looptime);
+  noInterrupts();
+  //smoothData();
+  sendData();
+  interrupts();
 }
