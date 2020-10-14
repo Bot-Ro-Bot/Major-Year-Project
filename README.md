@@ -15,4 +15,8 @@ which can be further utilized to perform a predefined action on a remote compute
 research also explores on improving traditional speech recognition models by possible
 augmentation of both approaches.
 
-### Team Members: Rabin Nepal, Rhimesh Lwagun, Sanjay Rijal, Upendra Subedi
+### Team Members: 
+#### Rabin Nepal https://github.com/Bot-Ro-Bot
+#### Rhimesh Lwagun https://github.com/riderman10000
+#### Sanjay Rijal https://github.com/zovelsanj
+#### Upendra Subedi https://github.com/upendrasubedi
