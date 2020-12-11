@@ -1,0 +1,58 @@
+import numpy as np 
+
+def process(num_classes,filepaths, labels = None, include_surrounding= True,
+			sample_rate = 250, channels= range(0, 8), surrounding = 150):
+	print("the lable is : ", labels)
+	def get_sequence_groups(filepath):
+		print("processing filepath"+str(filepath))
+		f = open(filepath, 'r')
+		contents = map(lambda x : x.strip(), f.readlines())
+		#the file starts with '%' and some instruction before data and removing these data 
+		frames_original = list(filter(lambda x : x and x[0] != '%', contents))[1:]
+		#the data row contains channels info digital trigger and accelerometer info separated by comma
+		frames_original = 	list(map(lambda s : list(map( lambda ss: ss.strip(), s.split(','))), frames_original))
+		
+		# (8 channels) + digital triggers
+		# the digital trigger is in a[16], used to indicate the utterance
+		frames = list(map(lambda a: list(map(float, a[1:9])) + [float(a[16])] , frames_original))
+		# last column consisted of time-stamp fo the recording(best to check file and file formatting of OPENBCI)
+		time_stamps = list(map(lambda a: a[-1], frames_original))
+		frames = np.array(frames)
+
+		speaking = False 
+		start_index = 0
+		num = -1
+		sequence_groups = [[] for _ in range(num_classes)]
+		padding = surrounding * sample_rate//250 if include_surrounding else 0
+		#separates the triggered data points...
+		for i in range(len(frames)):
+			if not speaking and bool(frames[i][-1]):
+				print('start speaking')
+				speaking = True
+				start_index = i 
+			if speaking and not bool(frames[i][-1]):
+				print('stop speaking')
+				speaking = False
+				if np.all(map(bool, frames[i-100:i, -1])):
+					num+= 1 
+					print(num)
+					sequence_groups[num % num_classes].append([frames[start_index- padding: i + padding, channels], labels])
+
+		if bool(frames[-1][-1]):
+			sequence_groups[num % num_classes].append(frames[start_index- padding:, channels])
+
+		sequence_groups = np.array(sequence_groups)
+
+		print("sequence_groups : ", sequence_groups.shape)
+
+		return sequence_groups
+
+	def join_sequence_groups(*g):
+		groups = [[] for _ in range(len(g[0]))]
+		for i in range(len(g)):
+			for j in range(len(g[0])):
+				groups[j] += list(g[i][j])
+		return np.array(groups)
+
+	sequence_groups = map(get_sequence_groups, filepaths)
+	return join_sequence_groups(* sequence_groups)
