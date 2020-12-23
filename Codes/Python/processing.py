@@ -36,7 +36,7 @@ def process(num_classes,filepaths, labels = None, include_surrounding= True,
 				if np.all(map(bool, frames[i-100:i, -1])):
 					num+= 1 
 					# print(num)
-					#remove any empty list present
+					#remove any empty list present in some file and prevent sequence_groups to add empty list
 					if list(frames[start_index- padding: i + padding, channels]) != [] :
 						sequence_groups[num % num_classes].append([frames[start_index- padding: i + padding, channels], labels])
 					else :
