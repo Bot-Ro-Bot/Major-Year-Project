@@ -13,7 +13,7 @@ def process(num_classes,filepaths, labels = None, include_surrounding= True,
 		frames_original = 	list(map(lambda s : list(map( lambda ss: ss.strip(), s.split(','))), frames_original))
 		
 		# (8 channels) + digital triggers
-		# the digital trigger is in a[16], used to indicate the utterance // while testing for eric and arnav file change it to 12
+		# the digital trigger is in a[16], used to indicate the utterance
 		frames = list(map(lambda a: list(map(float, a[1:9])) + [float(a[16])] , frames_original))
 		# last column consisted of time-stamp fo the recording(best to check file and file formatting of OPENBCI)
 		time_stamps = list(map(lambda a: a[-1], frames_original))
