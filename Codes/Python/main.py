@@ -13,7 +13,7 @@ sampling_frequency = 250	#	Hz
 def dataset(**kwargs):
 	data_dir = path
 	filepaths = glob.glob(path + "/**/*.txt", recursive= True)
-	filepaths = filepaths[:3]
+	# filepaths = filepaths[:3]
 	return [processing.process(1, [file], labels = file.split('/')[-2],**kwargs) for file in filepaths]
 
 total_data = dataset(channels = range(0, 8), surrounding=210)
@@ -120,13 +120,63 @@ for i in range(len(data)):
 	pad_before_n, pad_after_n = (int(np.floor(pad_width/2)) , int(np.ceil(pad_width/2)))
 	data[i] = np.pad(data[i], ((pad_before_n, pad_after_n), (0, 0)) , constant_values = (0.0, 0.0))
 
+#skipping feature extraction (for now)
 data = np.array(data)
 label = np.array(label)
+
+from sklearn.preprocessing import LabelEncoder
+labelencoder_y = LabelEncoder()
+label = labelencoder_y.fit_transform(label)
+
+from sklearn.model_selection import StratifiedShuffleSplit
+def train_test_split(X, Y, verbose = False):
+	split = StratifiedShuffleSplit(n_splits = 1, test_size = 0.1, random_state = 42)
+	train_id, test_id = next(split.split(X, Y))
+	if verbose:
+		print("train set shape: ", X[train_id].shape)
+		print("test set shape: 	", X[test_id].shape)
+	return 	X[train_id], Y[train_id], X[test_id], Y[test_id]
+
+X_train, Y_train, X_test, Y_test = train_test_split(data, label)
+
+#training model
+#1D-cnn
+import tensorflow as tf 
+from tensorflow import keras
+def CNN_Classifier(X_train, Y_train, X_test, Y_test):
+	Y_train = tf.keras.utils.to_categorical(Y_train, num_classes = num_label)
+	Y_test = tf.keras.utils.to_categorical(Y_test, num_classes = num_label)
+	CNN_model = keras.Sequential()
+	CNN_model.add(keras.layers.Conv1D(100, kernel_size = 3, input_shape = X_train.shape[1:], activation = "relu"))
+	CNN_model.add(keras.layers.MaxPool1D(pool_size=2))
+	CNN_model.add(keras.layers.Conv1D(100,kernel_size=3,activation="relu"))
+	CNN_model.add(keras.layers.MaxPool1D(pool_size=2))
+	CNN_model.add(keras.layers.Flatten())
+	CNN_model.add(keras.layers.Dense(100,activation="relu"))
+	CNN_model.add(keras.layers.Dense(num_label,activation="softmax"))
+
+	opt = keras.optimizers.Adam(lr = 0.00001)
+
+	CNN_model.compile(optimizer = opt, loss = keras.losses.categorical_crossentropy, metrics=['accuracy'])
+	print(CNN_model.summary())
+
+	history = CNN_model.fit(X_train, Y_train, epoches = 50, batch_size = 50, verbose = 1)
+
+	CNN_prediction = CNN_model.predict_classes(X_train)
+	max_val_acc = max(history.history['accuracy'])
+	print(max_val_acc)
+
+	return CNN_model.evaluate(X_test, Y_test)[1]
+
+
+print("CNN :",CNN_Classifier(X_train, Y_train, X_test, Y_test))
 
 # TODO 
 #feature extraction
 #use the model made
 #train and test
+
+#'''
 
 
 '''
