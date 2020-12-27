@@ -27,16 +27,20 @@ def process(num_classes,filepaths, labels = None, include_surrounding= True,
 		#separates the triggered data points...
 		for i in range(len(frames)):
 			if not speaking and bool(frames[i][-1]):
-				print('start speaking')
+				# print('start speaking')
 				speaking = True
 				start_index = i 
 			if speaking and not bool(frames[i][-1]):
-				print('stop speaking')
+				# print('stop speaking')
 				speaking = False
 				if np.all(map(bool, frames[i-100:i, -1])):
 					num+= 1 
-					print(num)
-					sequence_groups[num % num_classes].append([frames[start_index- padding: i + padding, channels], labels])
+					# print(num)
+					#remove any empty list present in some file and prevent sequence_groups to add empty list
+					if list(frames[start_index- padding: i + padding, channels]) != [] :
+						sequence_groups[num % num_classes].append([frames[start_index- padding: i + padding, channels], labels])
+					else :
+						print("[+] from get_sequence_groups : found NULL, ignoring ") 
 
 		if bool(frames[-1][-1]):
 			sequence_groups[num % num_classes].append(frames[start_index- padding:, channels])
