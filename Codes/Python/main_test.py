@@ -1,22 +1,23 @@
-#system
 import numpy as np 
 import glob
 
 #created
-from data.processing import *
+from data import processing
 
-root = '../../'			#if incomaptible to other then reference with os , os.getcwd and its methods. 
-# path = './mouthed' 	#later, we will change to data dir. which is only for data 
+path = '../../dataset/RL/mentally' 	#later, we will change to data dir. which is only for data 
+# path = '/home/rimesh/Files/major/codes/AlterEgo-master/Core'
 sampling_frequency = 250	#	Hz
 
 #load data
 def dataset(**kwargs):
 	data_dir = path
 	filepaths = glob.glob(path + "/**/*.txt", recursive= True)
-	# filepaths = filepaths[:3]
+	filepaths = filepaths[:3]
+	print(filepaths)
 	return [processing.process(1, [file], labels = file.split('/')[-2],**kwargs) for file in filepaths]
 
-# total_data = dataset(channels = range(0, 8), surrounding=210)
+total_data = dataset(channels = range(0, 8), surrounding=210)
+
 
 from scipy import signal
 def filter_data(data):
@@ -76,62 +77,53 @@ def filter_data(data):
 
 	return filtered
 
-
-#implement this if there is any missing or deleted pickle file which is unknown.
-checkresults = check_pickle(root+'dataset/US/')
-# if checkresults != []:
-# 	for checkresult in checkresults :
-# 		extractSegInPickle(checkresult, verbose = True)
-
-#implement this with appropripate REGEX to get/update the pickle file you desired.
-# extractSegInPickle(root+'dataset/US/mentally/', channels = range(0, 8), surrounding=210)
-
-#use REGEX to import the pickle data and label
-# data, label = loadSegOfPickle(root+'dataset/US/me*/')
-
-# test = []
-# for i in range(8):
-# 	test.append(filter_data(data[0][:,i]))
-
-# import matplotlib.pyplot as plt 
-# plt.plot(test)
-# plt.show()
+data = []
+label = []
+for i in range(len(total_data)):
+	for j in range(len(total_data[i])):				#choosing the file //as per the index it was necessary
+		for k in range(len(total_data[i][j])):		#chossing the data block in the file
+			for l in range(len(total_data[i][j][k][0][0,:])):
+				total_data[i][j][k][0][:,l] = filter_data(total_data[i][j][k][0][:,l])	#filters all the channel data //please recheck it...
+			data.append(total_data[i][j][k][0])		#recording the data 
+			label.append(total_data[i][j][k][1])	#recording the label
+num_label = len(list(set(label)))
 
 '''
 #data[data_number][sample_number, Channel_number]
 #label[data_number]
-
 data - variable to access the sampled data.
 label - label of the respective recorded data.
-
 data_number - sum of all the recorded files, a single file contains 10-20(nearly some might contain greater than 20(absent minded during recording.)) instance of records.
 `				thus it reference to the total number of data available.
 sample_number - number of samples recorded <rows> (variable in length due to differene in recording time)
 Channel_number - number of channels i.e. 8 <column>
 '''
 
-
-
-
-
-
-
-
-#zero padding 
-# maximum_length = max(list(map(len, data)))
-# print("the maximum_length is : ", maximum_length)
-# for i in range(len(data)):
-# 	pad_width = maximum_length - len(data[i])
-# 	pad_before_n, pad_after_n = (int(np.floor(pad_width/2)) , int(np.ceil(pad_width/2)))
-# 	data[i] = np.pad(data[i], ((pad_before_n, pad_after_n), (0, 0)) , constant_values = (0.0, 0.0))
-
-# #skipping feature extraction (for now)
-# data = np.array(data)
-# label = np.array(label)
-
+#visulaize the signal
+import matplotlib.pyplot as plt 
+plt.plot(data[0])
+plt.show()
 
 
 '''
+#applying ricker - on test
+# widths = np.arange(1, 50)
+# cwtmatr = signal.cwt(data[0][:,0],signal.ricker, widths)
+# plt.imshow(cwtmatr)
+# plt.show()
+
+#zero padding 
+maximum_length = max(list(map(len, data)))
+print("the maximum_length is : ", maximum_length)
+for i in range(len(data)):
+	pad_width = maximum_length - len(data[i])
+	pad_before_n, pad_after_n = (int(np.floor(pad_width/2)) , int(np.ceil(pad_width/2)))
+	data[i] = np.pad(data[i], ((pad_before_n, pad_after_n), (0, 0)) , constant_values = (0.0, 0.0))
+
+#skipping feature extraction (for now)
+data = np.array(data)
+label = np.array(label)
+
 from sklearn.preprocessing import LabelEncoder
 labelencoder_y = LabelEncoder()
 label = labelencoder_y.fit_transform(label)
@@ -155,25 +147,24 @@ def CNN_Classifier(X_train, Y_train, X_test, Y_test):
 	Y_train = tf.keras.utils.to_categorical(Y_train, num_classes = num_label)
 	Y_test = tf.keras.utils.to_categorical(Y_test, num_classes = num_label)
 	CNN_model = keras.Sequential()
-	CNN_model.add(keras.layers.Conv1D(100, kernel_size = 12, input_shape = X_train.shape[1:], activation = "relu"))
+	CNN_model.add(keras.layers.Conv1D(100, kernel_size = 3, input_shape = X_train.shape[1:], activation = "relu"))
 	CNN_model.add(keras.layers.MaxPool1D(pool_size=2))
-	CNN_model.add(keras.layers.Conv1D(100,kernel_size=6,activation="relu"))
+	CNN_model.add(keras.layers.Conv1D(100,kernel_size=3,activation="relu"))
 	CNN_model.add(keras.layers.MaxPool1D(pool_size=2))
 	CNN_model.add(keras.layers.Flatten())
 	CNN_model.add(keras.layers.Dense(100,activation="relu"))
 	CNN_model.add(keras.layers.Dense(num_label,activation="softmax"))
 
-	opt = keras.optimizers.Adam(lr = 0.0001)
+	opt = keras.optimizers.Adam(lr = 0.00001)
 
 	CNN_model.compile(optimizer = opt, loss = keras.losses.categorical_crossentropy, metrics=['accuracy'])
 	print(CNN_model.summary())
 
-	history = CNN_model.fit(X_train, Y_train, epochs = 20, batch_size = 50, verbose = 1)
+	history = CNN_model.fit(X_train, Y_train, epoches = 50, batch_size = 50, verbose = 1)
 
 	CNN_prediction = CNN_model.predict_classes(X_train)
-	# max_val_acc = max(history.history['accuracy'])
-	# print(max_val_acc)
-	# print(list(history.history.keys))
+	max_val_acc = max(history.history['accuracy'])
+	print(max_val_acc)
 
 	return CNN_model.evaluate(X_test, Y_test)[1]
 
@@ -192,5 +183,4 @@ print("CNN :",CNN_Classifier(X_train, Y_train, X_test, Y_test))
 source :
 https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html
 https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.iirnotch.html
-
 '''
