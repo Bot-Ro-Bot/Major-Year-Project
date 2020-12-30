@@ -111,12 +111,6 @@ Channel_number - number of channels i.e. 8 <column>
 '''
 
 
-
-
-
-
-
-
 #zero padding 
 # maximum_length = max(list(map(len, data)))
 # print("the maximum_length is : ", maximum_length)
@@ -128,57 +122,6 @@ Channel_number - number of channels i.e. 8 <column>
 # #skipping feature extraction (for now)
 # data = np.array(data)
 # label = np.array(label)
-
-
-
-'''
-from sklearn.preprocessing import LabelEncoder
-labelencoder_y = LabelEncoder()
-label = labelencoder_y.fit_transform(label)
-
-from sklearn.model_selection import StratifiedShuffleSplit
-def train_test_split(X, Y, verbose = False):
-	split = StratifiedShuffleSplit(n_splits = 1, test_size = 0.1, random_state = 42)
-	train_id, test_id = next(split.split(X, Y))
-	if verbose:
-		print("train set shape: ", X[train_id].shape)
-		print("test set shape: 	", X[test_id].shape)
-	return 	X[train_id], Y[train_id], X[test_id], Y[test_id]
-
-X_train, Y_train, X_test, Y_test = train_test_split(data, label)
-
-#training model
-#1D-cnn
-import tensorflow as tf 
-from tensorflow import keras
-def CNN_Classifier(X_train, Y_train, X_test, Y_test):
-	Y_train = tf.keras.utils.to_categorical(Y_train, num_classes = num_label)
-	Y_test = tf.keras.utils.to_categorical(Y_test, num_classes = num_label)
-	CNN_model = keras.Sequential()
-	CNN_model.add(keras.layers.Conv1D(100, kernel_size = 12, input_shape = X_train.shape[1:], activation = "relu"))
-	CNN_model.add(keras.layers.MaxPool1D(pool_size=2))
-	CNN_model.add(keras.layers.Conv1D(100,kernel_size=6,activation="relu"))
-	CNN_model.add(keras.layers.MaxPool1D(pool_size=2))
-	CNN_model.add(keras.layers.Flatten())
-	CNN_model.add(keras.layers.Dense(100,activation="relu"))
-	CNN_model.add(keras.layers.Dense(num_label,activation="softmax"))
-
-	opt = keras.optimizers.Adam(lr = 0.0001)
-
-	CNN_model.compile(optimizer = opt, loss = keras.losses.categorical_crossentropy, metrics=['accuracy'])
-	print(CNN_model.summary())
-
-	history = CNN_model.fit(X_train, Y_train, epochs = 20, batch_size = 50, verbose = 1)
-
-	CNN_prediction = CNN_model.predict_classes(X_train)
-	# max_val_acc = max(history.history['accuracy'])
-	# print(max_val_acc)
-	# print(list(history.history.keys))
-
-	return CNN_model.evaluate(X_test, Y_test)[1]
-
-
-print("CNN :",CNN_Classifier(X_train, Y_train, X_test, Y_test))
 
 # TODO 
 #feature extraction
