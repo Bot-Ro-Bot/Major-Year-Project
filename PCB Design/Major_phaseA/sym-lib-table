@@ -1,0 +1,3 @@
+(sym_lib_table
+  (lib (name oppo)(type Legacy)(uri ${KIPRJMOD}/oppo.lib)(options "")(descr ""))
+)

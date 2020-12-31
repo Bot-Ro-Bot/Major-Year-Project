@@ -1,16 +1,22 @@
-# Major-Year-Project
 
-A Major Project On "Human-Computer Interaction using Neuromuscular Signals"
-This project is about designing a Human Computer Interface that reads
-Electromyography signals from different parts of Articulatory System. The signal is
-perceived from different muscles of articulatory system that is associated with internal
-articulation of voice commands. The signal which is in the range of microvolts is
-amplified to volts using instrumentation amplifiers and artifacts occurred is filtered in
-two steps combined with high pass and low pass filters. Amplifiers and filters are
-embedded in a printed circuit board along with Arduino and Bluetooth module for remote
-communication. Digitalized signal from Arduino is sent to a remote computer via
-Bluetooth. Received signal is pre-processed for feature extraction which is fed to the
-neural network to recognize internally articulated English alphabets or digits or words.
-Finally, the recognized information is displayed on the computer screen.
+## A Major Project On "Human-Computer Interaction using Neuromuscular Signals"
 
-Team Members: Rabin Nepal, Rhimesh Lwagun, Sanjay Rijal, Upendra Subedi
+### ABSTRACT
+Subvocal speech or internal articulation is a form of non-voiced speech that is voluntarily
+spoken. It is generated alongside the micromovement of the articulatory muscles that is
+imperceptible to others. However, the faint sEMG (surface Electromyography) signals
+can still be detected and analyzed to predict the internally articulated speech. This
+research project attempts to study this very phenomenon and its possible use case in
+human computer interaction. By extracting sEMG signals from several of these
+articulators and processing the extracted signals, prominent features of a particular
+utterance can be isolated and can be used to train a machine learning model. After training
+the model on several such utterances, accurate predictions of the utterances can be made
+which can be further utilized to perform a predefined action on a remote computer. This
+research also explores on improving traditional speech recognition models by possible
+augmentation of both approaches.
+
+### Team Members: 
+#### Rabin Nepal https://github.com/Bot-Ro-Bot
+#### Rhimesh Lwagun https://github.com/riderman10000
+#### Sanjay Rijal https://github.com/zovelsanj
+#### Upendra Subedi https://github.com/upendrasubedi
