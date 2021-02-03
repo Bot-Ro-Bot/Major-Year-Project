@@ -109,7 +109,7 @@ def extractSegInPickle(path, **kwargs):
 	for p in glob.glob(path):
 		def dataset(**kwargs):
 			filepaths = glob.glob(p+'*/*.txt', recursive = True)
-			filepaths = filepaths[:3]
+			# filepaths = filepaths[:3]
 			print(filepaths)
 			return [process(1, [file], labels = file.split('/')[-2],**kwargs) for file in filepaths]
 
@@ -128,10 +128,6 @@ def extractSegInPickle(path, **kwargs):
 					data.append(total_data[i][j][k][0])		#recording the data 
 					label.append(total_data[i][j][k][1])	#recording the label
 		
-		if(total_data[0][0][0][0][0,0] == data[0][0,0]):
-			print("KHAI K VA HO ")
-			print(total_data[0][0][0][0][:,0])
-			print(data[0][:,0])
 
 		with open(p+  'data_'+picklefile_name, 'wb') as f:
 			if verbose:
