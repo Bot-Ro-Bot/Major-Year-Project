@@ -1,6 +1,7 @@
 #system
 import numpy as np 
 import glob
+import matplotlib.pyplot as plt 
 
 #created
 from data.processing import *
@@ -78,7 +79,7 @@ def filter_data(data):
 
 
 #implement this if there is any missing or deleted pickle file which is unknown.
-checkresults = check_pickle(root+'dataset/[R|S]*/')
+checkresults = check_pickle(root+'dataset/[R|S|U]*/')
 # if checkresults != []:
 # 	for checkresult in checkresults :
 # 		extractSegInPickle(checkresult, verbose = True)
@@ -90,7 +91,22 @@ if checkresults != []:
 #use  unix glob patterns to import the pickle data and label 
 data, label = loadSegOfPickle(root+'dataset/RL/mo*/')
 
-import matplotlib.pyplot as plt 
+labs = list(set(label))
+counts = [ label.count(i) for i in labs ]
+x_pos = np.arange(len(labs))
+y_pos = np.arange(len(labs))#np.arange(0,max(counts), 5)
+
+print(labs)
+print(counts)
+
+plt.bar(y_pos, counts, align = 'center', alpha = 0.5)
+plt.xticks(x_pos, labs)
+plt.ylabel('counts')
+plt.title('RL data distribution')
+plt.show()
+
+
+# import matplotlib.pyplot as plt 
 def graphit(arr, title = 'Title', saveplot = False):
 	fig, axes = plt.subplots(arr.shape[-1])
 	fig.suptitle(title)
@@ -109,7 +125,8 @@ def running_mean(x, N):
 	cumsum = np.cumsum(np.insert(x, 0 , 0))
 	return (cumsum[N:] - cumsum[:-N]) / float(N)
 
-gef = get_emg_features(data[0], True)
+# gef = get_emg_features(data[0], True)
+
 
 # arr = d['data'][d['word'].index('add', d['mode'].index('mentally', d['speaker'].index('RL')))]
 
@@ -134,24 +151,31 @@ sample_number - number of samples recorded <rows> (variable in length due to dif
 Channel_number - number of channels i.e. 8 <column>
 '''
 
-#zero padding 
-# maximum_length = max(list(map(len, data)))
-# print("the maximum_length is : ", maximum_length)
-# for i in range(len(data)):
-# 	pad_width = maximum_length - len(data[i])
-# 	pad_before_n, pad_after_n = (int(np.floor(pad_width/2)) , int(np.ceil(pad_width/2)))
-# 	data[i] = np.pad(data[i], ((pad_before_n, pad_after_n), (0, 0)) , constant_values = (0.0, 0.0))
+#skipping feature extraction (for now)
+data = np.array(data)
+label = np.array(label)
 
-# #skipping feature extraction (for now)
-# data = np.array(data)
-# label = np.array(label)
+for i in range(data.shape[0]):
+	for j in range(data[i].shape[-1]):
+		data[i][:,j] = filter_data(data[i][:,j])
 
+# zero padding 
+temp = []
+maximum_length = max(list(map(len, data)))
+print("the maximum_length is : ", maximum_length)
+for i in range(len(data)):
+	pad_width = maximum_length - len(data[i])
+	pad_before_n, pad_after_n = (int(np.floor(pad_width/2)) , int(np.ceil(pad_width/2)))
+	# data[i] = np.pad(data[i], ((pad_before_n, pad_after_n), (0, 0)) , constant_values = (0.0, 0.0))
+	temp.append(np.pad(data[i], ((pad_before_n, pad_after_n), (0, 0)) , constant_values = (0.0, 0.0)))
+data = np.array(temp)
 
-
-'''
 from sklearn.preprocessing import LabelEncoder
 labelencoder_y = LabelEncoder()
 label = labelencoder_y.fit_transform(label)
+
+num_label = len(set(label))
+print('[+] num_label = ', num_label)
 
 from sklearn.model_selection import StratifiedShuffleSplit
 def train_test_split(X, Y, verbose = False):
@@ -163,6 +187,10 @@ def train_test_split(X, Y, verbose = False):
 	return 	X[train_id], Y[train_id], X[test_id], Y[test_id]
 
 X_train, Y_train, X_test, Y_test = train_test_split(data, label)
+
+print("X_train.shape", X_train.shape)
+print("X_train.shape[]", X_train[0].shape)
+
 
 #training model
 #1D-cnn
@@ -185,17 +213,30 @@ def CNN_Classifier(X_train, Y_train, X_test, Y_test):
 	CNN_model.compile(optimizer = opt, loss = keras.losses.categorical_crossentropy, metrics=['accuracy'])
 	print(CNN_model.summary())
 
-	history = CNN_model.fit(X_train, Y_train, epochs = 20, batch_size = 50, verbose = 1)
+	history = CNN_model.fit(X_train, Y_train, epochs = 20, batch_size = 50, validation_data =(X_test, Y_test) ,verbose = 1)
 
 	CNN_prediction = CNN_model.predict_classes(X_train)
+	
+
 	# max_val_acc = max(history.history['accuracy'])
-	# print(max_val_acc)
-	# print(list(history.history.keys))
+	# print(max_val_acc) #['loss', 'acc']
+
+	print(list(history.history.keys()))
+	plt.plot(history.history['acc'])
+	plt.plot(history.history['val_acc'])
+	# plt.plot(history.history['loss'])
+	plt.title('model acc')
+	plt.ylabel('accuracy')
+	plt.xlabel('epoch')
+	plt.show()
 
 	return CNN_model.evaluate(X_test, Y_test)[1]
 
 
 print("CNN :",CNN_Classifier(X_train, Y_train, X_test, Y_test))
+
+
+
 
 # TODO 
 #feature extraction
