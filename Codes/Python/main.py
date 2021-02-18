@@ -2,6 +2,10 @@
 import numpy as np 
 import glob
 import matplotlib.pyplot as plt 
+import pickle
+
+from scipy import signal
+
 
 #created
 from data.processing import *
@@ -11,6 +15,7 @@ root = '../../'			#if incomaptible to other then reference with os , os.getcwd a
 # path = './mouthed' 	#later, we will change to data dir. which is only for data 
 sampling_frequency = 250	#	Hz
 
+# DATA EXTRACTION
 #load data
 def dataset(**kwargs):
 	data_dir = path
@@ -20,123 +25,22 @@ def dataset(**kwargs):
 
 # total_data = dataset(channels = range(0, 8), surrounding=210)
 
-from scipy import signal
-def filter_data(data):
-	#this follows the arnav process
-
-	#signal processing
-	#	- bpf, notch filter (50 Hz)
-	
-	#applying high pass filter - 0.5, used to remove frequencies lower than 0.5Hz
-	filter_order = 1
-	# critical_frequencies = [15, 50] #in Hz
-	critical_frequency = 0.5 	# in Hz
-	FILTER = 'highpass'				#'bandpass'
-	output = 'sos'
-	#design butterworth bandpass filter
-	sos = signal.butter(filter_order, critical_frequency, FILTER, fs = sampling_frequency, output= output)
-	filtered = signal.sosfilt(sos, data)
-
-	#normalize -(normalizing to a mean amplitude of zero (still need to cross check this))
-	data = data - np.mean(data, axis = 0)
-
-	#3rd order notch (butterworth// need to implement still) - power line noise , 50 Hz and its harmonics.
-	#applying notch filter
-	notch_times = 3
-	notch_frequency = 50 	#Hz
-	quality_factor = 30 	# 			-- no reason just copied.
-	
-	#design notch filter 
-	# b, a = signal.iirnotch(notch_frequency, quality_factor, sampling_frequency)
-	# filtered = signal.lfilter(b, a, filtered)
-	
-	freqs = list(map(int , list(map(round, np.arange(1, sampling_frequency/(2. * notch_frequency))* notch_frequency ))  ))
-	for _ in range(notch_times):
-		for f in reversed(freqs):
-			b, a = signal.iirnotch(f, quality_factor, sampling_frequency)
-			filtered = signal.lfilter(b, a, filtered)
-
-
-	#TODO: removing heartbeat artifacts...
-	#applying ricker
-	# widths = np.arange(1, 50)
-	# cwtmatr = signal.cwt(data,signal.ricker, widths)
-	# data = data - cwtmatr n
-
-
-	#applying bandpass filter, 0.5 - 8 Hz
-	filter_order = 1
-	# critical_frequencies = [15, 50] #in Hz
-	critical_frequencies =[ 0.5, 8] 	# in Hz
-	FILTER = 'bandpass'				#'bandpass'
-	output = 'sos'
-
-	#design butterworth bandpass filter
-	sos = signal.butter(filter_order, critical_frequencies, FILTER, fs = sampling_frequency, output= output)
-	filtered = signal.sosfilt(sos, data)
-
-	return filtered
-
-
-#implement this if there is any missing or deleted pickle file which is unknown.
+#implement this to check if there is any missing or deleted pickle file which is unknown.
 checkresults = check_pickle(root+'dataset/[R|S|U]*/')
+
+# uncomment below to get(or update) the missing(or deleted) pickel files 
+
+#implement this with appropripate  unix glob patterns to get(or update) the pickle file from checkresults.
 # if checkresults != []:
 # 	for checkresult in checkresults :
 # 		extractSegInPickle(checkresult, verbose = True)
 
-#implement this with appropripate  unix glob patterns to get/update the pickle file you desired.
-if checkresults != []:
-	extractSegInPickle(root+'dataset/*/*/', channels = range(0, 8), surrounding=210)
+#implement this with appropripate  unix glob patterns to get(or update) the pickle file you desired.
+# if checkresults != []:
+	# extractSegInPickle(root+'dataset/*/*/', channels = range(0, 8), surrounding=210)
 
-#use  unix glob patterns to import the pickle data and label 
-data, label = loadSegOfPickle(root+'dataset/RL/mo*/')
-
-labs = list(set(label))
-counts = [ label.count(i) for i in labs ]
-x_pos = np.arange(len(labs))
-y_pos = np.arange(len(labs))#np.arange(0,max(counts), 5)
-
-print(labs)
-print(counts)
-
-plt.bar(y_pos, counts, align = 'center', alpha = 0.5)
-plt.xticks(x_pos, labs)
-plt.ylabel('counts')
-plt.title('RL data distribution')
-plt.show()
-
-
-# import matplotlib.pyplot as plt 
-def graphit(arr, title = 'Title', saveplot = False):
-	fig, axes = plt.subplots(arr.shape[-1])
-	fig.suptitle(title)
-	for i in range(arr.shape[-1]):
-		axes[i].plot(arr[:,i])
-	if not saveplot:
-		plt.show()
-	else :
-		plt.savefig(title+'.png')
-
-def running_mean(x, N):
-	'''
-	x array of data
-	N number of samples per average
-	'''
-	cumsum = np.cumsum(np.insert(x, 0 , 0))
-	return (cumsum[N:] - cumsum[:-N]) / float(N)
-
-# gef = get_emg_features(data[0], True)
-
-
-# arr = d['data'][d['word'].index('add', d['mode'].index('mentally', d['speaker'].index('RL')))]
-
-# test = []
-# for i in range(8):
-# 	test.append(filter_data(data[0][:,i]))
-
-# import matplotlib.pyplot as plt 
-# plt.plot(test)
-# plt.show()
+#use  unix glob patterns to import the pickle data and label
+data, label = loadSegOfPickle(root+'dataset/US/mo*/')
 
 '''
 #data[data_number][sample_number, Channel_number]
@@ -151,9 +55,72 @@ sample_number - number of samples recorded <rows> (variable in length due to dif
 Channel_number - number of channels i.e. 8 <column>
 '''
 
+
+#plot for the data distribution.
+labs = list(set(label))
+counts = [ label.count(i) for i in labs ]
+x_pos = np.arange(len(labs))
+y_pos = np.arange(len(labs))#np.arange(0,max(counts), 5)
+
+print(labs)
+print(counts)
+
+plt.bar(y_pos, counts, align = 'center', alpha = 0.5)
+plt.xticks(x_pos, labs)
+plt.ylabel('counts')
+plt.title('US data distribution')
+plt.show()
+# end of distribution plot
+
+# import matplotlib.pyplot as plt 
+#method to print the channel in subplots, just pass the data[X] or data[X][:, X:Y]
+def graphit(arr, title = 'Title', saveplot = False):
+	fig, axes = plt.subplots(arr.shape[-1], sharex = True, sharey= True)
+	fig.text(0.5,0.02,'# of Samples', ha = 'center')
+	fig.text(0.02,0.5,'Amplitude (uV)', va = 'center', rotation= 'vertical')
+	# fig.suptitle(title)
+
+	fig.tight_layout()
+	for i in range(arr.shape[-1]):
+		axes[i].plot(arr[:,i])
+	if not saveplot:
+		plt.show()
+	else :
+		plt.savefig(title+'.png')
+
+#for fft
+from scipy.fft import fft, fftfreq
+def fftplot(data_x):
+	N = len(data_x)
+	T = 1.0 / fs
+	yf = fft(data_x)
+	xf = fftfreq(N, T)[:,N//2]
+	plt.plot(xf, 2.0/N * np.abs(yf[0:N//2]))
+	plt.grid()
+	plt.show()
+
+def running_mean(x, N):
+	'''
+	x array of data
+	N number of samples per average
+	'''
+	cumsum = np.cumsum(np.insert(x, 0 , 0))
+	return (cumsum[N:] - cumsum[:-N]) / float(N)
+
+# END OF DATA EXTRACTION
+
+
 #skipping feature extraction (for now)
 data = np.array(data)
 label = np.array(label)
+
+#contains the sets of labels being used.
+label_sets = list(sorted(set(label)))
+#2-d array containing list of start and end index of the label_sets in the label
+#rows for the label_sets.
+#columns : [name, start_index, end_index]
+label_start_end_indicies = [ [label_set, np.where(label == label_set)[0][0], np.where(label == label_set)[0][-1]] for label_set in label_sets  ]
+
 
 for i in range(data.shape[0]):
 	for j in range(data[i].shape[-1]):
@@ -169,6 +136,9 @@ for i in range(len(data)):
 	# data[i] = np.pad(data[i], ((pad_before_n, pad_after_n), (0, 0)) , constant_values = (0.0, 0.0))
 	temp.append(np.pad(data[i], ((pad_before_n, pad_after_n), (0, 0)) , constant_values = (0.0, 0.0)))
 data = np.array(temp)
+
+# graphit(data[0])
+
 
 from sklearn.preprocessing import LabelEncoder
 labelencoder_y = LabelEncoder()
@@ -191,7 +161,6 @@ X_train, Y_train, X_test, Y_test = train_test_split(data, label)
 print("X_train.shape", X_train.shape)
 print("X_train.shape[]", X_train[0].shape)
 
-
 #training model
 #1D-cnn
 import tensorflow as tf 
@@ -213,10 +182,12 @@ def CNN_Classifier(X_train, Y_train, X_test, Y_test):
 	CNN_model.compile(optimizer = opt, loss = keras.losses.categorical_crossentropy, metrics=['accuracy'])
 	print(CNN_model.summary())
 
-	history = CNN_model.fit(X_train, Y_train, epochs = 20, batch_size = 50, validation_data =(X_test, Y_test) ,verbose = 1)
+	history = CNN_model.fit(X_train, Y_train, epochs = 15, batch_size = 50, validation_data =(X_test, Y_test) ,verbose = 1)
 
 	CNN_prediction = CNN_model.predict_classes(X_train)
 	
+	#save model
+	CNN_model.save('model')
 
 	# max_val_acc = max(history.history['accuracy'])
 	# print(max_val_acc) #['loss', 'acc']
@@ -232,23 +203,25 @@ def CNN_Classifier(X_train, Y_train, X_test, Y_test):
 
 	return CNN_model.evaluate(X_test, Y_test)[1]
 
-
 print("CNN :",CNN_Classifier(X_train, Y_train, X_test, Y_test))
-
-
-
 
 # TODO 
 #feature extraction
 #use the model made
 #train and test
 
-#'''
+#terminal test
+# model = keras.models.load_model('model')
+# checkresults = check_pickle('~/Document/OpenBCI_GUI/Recordings', file_extension = '*.txt')
 
+
+#'''
 
 '''
 source :
 https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html
 https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.iirnotch.html
 https://www.codegrepper.com/code-examples/python/moving+average+filter+in+python
+https://machinelearningmastery.com/save-load-machine-learning-models-python-scikit-learn/
+https://www.tensorflow.org/guide/keras/save_and_serialize
 '''
