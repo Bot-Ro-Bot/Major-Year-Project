@@ -252,4 +252,3 @@ https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html
 https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.iirnotch.html
 https://www.codegrepper.com/code-examples/python/moving+average+filter+in+python
 '''
-hahahahahahhahahahahhahahhahhahahah
