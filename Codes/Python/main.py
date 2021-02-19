@@ -40,7 +40,7 @@ checkresults = check_pickle(root+'dataset/[R|S|U]*/')
 	# extractSegInPickle(root+'dataset/*/*/', channels = range(0, 8), surrounding=210)
 
 #use  unix glob patterns to import the pickle data and label
-data, label = loadSegOfPickle(root+'dataset/US/mo*/')
+data, label = loadSegOfPickle(root+'dataset/SR/mo*/')
 
 '''
 #data[data_number][sample_number, Channel_number]
@@ -68,7 +68,7 @@ print(counts)
 plt.bar(y_pos, counts, align = 'center', alpha = 0.5)
 plt.xticks(x_pos, labs)
 plt.ylabel('counts')
-plt.title('US data distribution')
+plt.title('SR data distribution')
 plt.show()
 # end of distribution plot
 
@@ -137,6 +137,7 @@ for i in range(len(data)):
 	temp.append(np.pad(data[i], ((pad_before_n, pad_after_n), (0, 0)) , constant_values = (0.0, 0.0)))
 data = np.array(temp)
 
+
 # graphit(data[0])
 
 
@@ -187,7 +188,7 @@ def CNN_Classifier(X_train, Y_train, X_test, Y_test):
 	CNN_prediction = CNN_model.predict_classes(X_train)
 	
 	#save model
-	CNN_model.save('model')
+	CNN_model.save('model_CNN_SR_Mo_raw')
 
 	# max_val_acc = max(history.history['accuracy'])
 	# print(max_val_acc) #['loss', 'acc']
@@ -195,9 +196,15 @@ def CNN_Classifier(X_train, Y_train, X_test, Y_test):
 	print(list(history.history.keys()))
 	plt.plot(history.history['acc'])
 	plt.plot(history.history['val_acc'])
-	# plt.plot(history.history['loss'])
 	plt.title('model acc')
+	plt.legend([ 'validation_acc','training_acc'])
 	plt.ylabel('accuracy')
+	plt.xlabel('epoch')
+	plt.show()
+	plt.plot(history.history['loss'])
+	plt.plot(history.history['val_loss'])
+	plt.legend([ 'validation_loss' ,'training_loss'])
+	plt.ylabel('loss')
 	plt.xlabel('epoch')
 	plt.show()
 

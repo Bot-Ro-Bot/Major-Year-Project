@@ -109,7 +109,9 @@ def filter_data(data, dataplot= False,  filter_response_plot = False, sampling_f
 	ricker = signal.ricker(ricker_width,ricker_sigma)
 	# normalize ricker
 	ricker = np.array(ricker, np.float32) / np.sum(np.abs(ricker))
+	#obtain the ricker in the data 
 	convolution = signal.convolve(filtered,ricker,mode="same")
+	#remove the heart beat artifacts from the original signal
 	filtered = filtered - 2*convolution
 	
 	# # print(type(convolution))

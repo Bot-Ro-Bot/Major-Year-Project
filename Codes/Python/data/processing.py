@@ -168,10 +168,9 @@ def loadSegOfPickle(path, **kwargs):
 	return data, label
 
 
-
 def check_file(path, file_extension = '*.txt', verbose = False):
 	'''
-	checks all the sub-directory for file.
+	checks all the sub-directory for file with the provided extension.
 	returns the paths of the directory that have file.
 	'''
 	found_files = []
@@ -194,5 +193,44 @@ def check_file(path, file_extension = '*.txt', verbose = False):
 			else :
 				if verbose:
 					print('[-] ' + file_extension +' File not found in : '+ sub_dir)
-
 	return found_files
+
+
+# similar to extractSegInPickle
+# things between extractSegInPickle and extractSeg_from_file could be implemented in a combined way 
+def extractSeg_from_file(path, **kwargs):
+	# TODO : need to add extensions but will do for now 
+	r_data = []
+	r_label = []
+	print("this is glob : ",glob.glob(str(path)))
+	for p in glob.glob(path):
+		def dataset(**kwargs):
+			#search all the files (with extension .txt ) in the pointed dir. #note it will not search any sub directories within
+			filepaths = glob.glob(p+'*.txt', recursive = True)
+			# filepaths = filepaths[:3]		#just to limit the output while testing.
+			print(filepaths)
+			return [process(1, [file], labels = file.split('/')[-2],**kwargs) for file in filepaths]
+
+		total_data = dataset(**kwargs)
+
+		data = []
+		label = []
+		#just to sort data out
+		for i in range(len(total_data)):
+			for j in range(len(total_data[i])):				#choosing the file //as per the index it was necessary
+				for k in range(len(total_data[i][j])):		#chossing the data block in the file
+					data.append(total_data[i][j][k][0])		#recording the data 
+					label.append(total_data[i][j][k][1])	#recording the label
+		
+		r_data.append(data)
+		r_label.append(label)
+
+	#just to sort data out
+	data = []
+	label = []
+	for i in range(len(r_data)):
+		for j in range(len(r_data[i])):
+			data.append(r_data[i][j])
+			label.append(r_label[i][j])
+
+	return data, label
