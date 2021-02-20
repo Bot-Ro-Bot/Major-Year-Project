@@ -34,7 +34,7 @@ def process(num_classes,filepaths, labels = None, include_surrounding= True,
 			if speaking and not bool(frames[i][-1]):
 				# print('stop speaking')
 				speaking = False
-				if np.all(map(bool, frames[i-100:i, -1])):
+				if np.all(map(bool, frames[i-200:i, -1])):
 					num+= 1 
 					# print(num)
 					if list(frames[start_index- padding: i + padding, channels]) != [] :
@@ -98,21 +98,22 @@ def check_pickle(path):
 
 	return pickle_to_extract
 	#returns list of ['../../dataset/<person>/<types>/']
-			
+	# types refer to : Mentally & Mouthed
 
 import pickle
 def extractSegInPickle(path, **kwargs):
 	# path must be  := root + '<person>/<types>/'
+	# types refer to : Mentally & Mouthed
 	r_data = []
 	r_label = []
 	print("this is glob : ",glob.glob(path))
 	for p in glob.glob(path):
 		def dataset(**kwargs):
+			#1st '*'' is for Words and 2nd '*' is the name of the file.
 			filepaths = glob.glob(p+'*/*.txt', recursive = True)
-			# filepaths = filepaths[:3]
+			# filepaths = filepaths[:3]		#just to limit the output while testing.
 			print(filepaths)
 			return [process(1, [file], labels = file.split('/')[-2],**kwargs) for file in filepaths]
-
 
 		total_data = dataset(**kwargs)
 
@@ -128,7 +129,6 @@ def extractSegInPickle(path, **kwargs):
 					data.append(total_data[i][j][k][0])		#recording the data 
 					label.append(total_data[i][j][k][1])	#recording the label
 		
-
 		with open(p+  'data_'+picklefile_name, 'wb') as f:
 			if verbose:
 				print('[*] Writing to file :', f)
@@ -164,5 +164,73 @@ def loadSegOfPickle(path, **kwargs):
 		for j in range(len(temp_data[i])):
 			data.append(temp_data[i][j])
 			label.append(temp_label[i][j])
+
+	return data, label
+
+
+def check_file(path, file_extension = '*.txt', verbose = False):
+	'''
+	checks all the sub-directory for file with the provided extension.
+	returns the paths of the directory that have file.
+	'''
+	found_files = []
+	print('Finding file')
+	dirs = glob.glob(path)
+	for dir in dirs:
+		if verbose:
+			print("[*] Checking For "+file_extension )
+			print("[*] In Directory : ", dir)
+		sub_dirs = glob.glob(dir + '*/')
+		for sub_dir in sub_dirs:
+			if verbose:
+				print("[*]\tIn Sub Directory : ", sub_dir)
+			file = glob.glob(sub_dir+file_extension)
+			# print(picklefile)
+			if file != []:
+				if verbose:
+					print("[+] " +  file_extension+" File found.")
+				found_files.append(sub_dir)
+			else :
+				if verbose:
+					print('[-] ' + file_extension +' File not found in : '+ sub_dir)
+	return found_files
+
+
+# similar to extractSegInPickle
+# things between extractSegInPickle and extractSeg_from_file could be implemented in a combined way 
+def extractSeg_from_file(path, **kwargs):
+	# TODO : need to add extensions but will do for now 
+	r_data = []
+	r_label = []
+	print("this is glob : ",glob.glob(str(path)))
+	for p in glob.glob(path):
+		def dataset(**kwargs):
+			#search all the files (with extension .txt ) in the pointed dir. #note it will not search any sub directories within
+			filepaths = glob.glob(p+'*.txt', recursive = True)
+			# filepaths = filepaths[:3]		#just to limit the output while testing.
+			print(filepaths)
+			return [process(1, [file], labels = file.split('/')[-2],**kwargs) for file in filepaths]
+
+		total_data = dataset(**kwargs)
+
+		data = []
+		label = []
+		#just to sort data out
+		for i in range(len(total_data)):
+			for j in range(len(total_data[i])):				#choosing the file //as per the index it was necessary
+				for k in range(len(total_data[i][j])):		#chossing the data block in the file
+					data.append(total_data[i][j][k][0])		#recording the data 
+					label.append(total_data[i][j][k][1])	#recording the label
+		
+		r_data.append(data)
+		r_label.append(label)
+
+	#just to sort data out
+	data = []
+	label = []
+	for i in range(len(r_data)):
+		for j in range(len(r_data[i])):
+			data.append(r_data[i][j])
+			label.append(r_label[i][j])
 
 	return data, label
