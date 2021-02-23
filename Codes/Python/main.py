@@ -3,9 +3,9 @@ import numpy as np
 import glob
 import matplotlib.pyplot as plt 
 import pickle
+import pandas as pd
 
 from scipy import signal
-
 
 #created
 from data.processing import *
@@ -16,14 +16,6 @@ root = '../../'			#if incomaptible to other then reference with os , os.getcwd a
 sampling_frequency = 250	#	Hz
 
 # DATA EXTRACTION
-#load data
-def dataset(**kwargs):
-	data_dir = path
-	filepaths = glob.glob(path + "/**/*.txt", recursive= True)
-	# filepaths = filepaths[:3]
-	return [processing.process(1, [file], labels = file.split('/')[-2],**kwargs) for file in filepaths]
-
-# total_data = dataset(channels = range(0, 8), surrounding=210)
 
 #implement this to check if there is any missing or deleted pickle file which is unknown.
 checkresults = check_pickle(root+'dataset/[R|S|U]*/')
@@ -31,16 +23,17 @@ checkresults = check_pickle(root+'dataset/[R|S|U]*/')
 # uncomment below to get(or update) the missing(or deleted) pickel files 
 
 #implement this with appropripate  unix glob patterns to get(or update) the pickle file from checkresults.
+# method 1 : extract and store data only from the missing obtain from the above checkresults. 
 # if checkresults != []:
 # 	for checkresult in checkresults :
 # 		extractSegInPickle(checkresult, verbose = True)
 
-#implement this with appropripate  unix glob patterns to get(or update) the pickle file you desired.
+# method 2 : implement this with appropripate  unix glob patterns to get(or update) the pickle file you desired or proceed to extract and store from all data.
 # if checkresults != []:
 	# extractSegInPickle(root+'dataset/*/*/', channels = range(0, 8), surrounding=210)
 
 #use  unix glob patterns to import the pickle data and label
-data, label = loadSegOfPickle(root+'dataset/SR/mo*/')
+data, label = loadSegOfPickle(root+'dataset/[R|S|U]*/me*/')
 
 '''
 #data[data_number][sample_number, Channel_number]
@@ -55,7 +48,6 @@ sample_number - number of samples recorded <rows> (variable in length due to dif
 Channel_number - number of channels i.e. 8 <column>
 '''
 
-
 #plot for the data distribution.
 labs = list(set(label))
 counts = [ label.count(i) for i in labs ]
@@ -68,52 +60,27 @@ print(counts)
 plt.bar(y_pos, counts, align = 'center', alpha = 0.5)
 plt.xticks(x_pos, labs)
 plt.ylabel('counts')
-plt.title('SR data distribution')
+plt.title('data distribution')
 plt.show()
 # end of distribution plot
 
-# import matplotlib.pyplot as plt 
-#method to print the channel in subplots, just pass the data[X] or data[X][:, X:Y]
-def graphit(arr, title = 'Title', saveplot = False):
-	fig, axes = plt.subplots(arr.shape[-1], sharex = True, sharey= True)
-	fig.text(0.5,0.02,'# of Samples', ha = 'center')
-	fig.text(0.02,0.5,'Amplitude (uV)', va = 'center', rotation= 'vertical')
-	# fig.suptitle(title)
-
-	fig.tight_layout()
-	for i in range(arr.shape[-1]):
-		axes[i].plot(arr[:,i])
-	if not saveplot:
-		plt.show()
-	else :
-		plt.savefig(title+'.png')
-
-#for fft
-from scipy.fft import fft, fftfreq
-def fftplot(data_x):
-	N = len(data_x)
-	T = 1.0 / fs
-	yf = fft(data_x)
-	xf = fftfreq(N, T)[:,N//2]
-	plt.plot(xf, 2.0/N * np.abs(yf[0:N//2]))
-	plt.grid()
-	plt.show()
-
-def running_mean(x, N):
-	'''
-	x array of data
-	N number of samples per average
-	'''
-	cumsum = np.cumsum(np.insert(x, 0 , 0))
-	return (cumsum[N:] - cumsum[:-N]) / float(N)
-
 # END OF DATA EXTRACTION
 
+def drop_data(X,Y,MIN=100,MAX=900):
+    index = []
+    j = 0
+    for i in range(len(X)):
+        if(len(X[i][:,0])<MIN or len(X[i][:,0])>MAX):
+            j = j + 1
+            print(j, i , len(X[i][:,0]))
+            continue
+        index.append(i)
+    return [X[n] for n in index],[Y[n] for n in index]
 
-#skipping feature extraction (for now)
+data, label = drop_data(data, label)
+
 data = np.array(data)
 label = np.array(label)
-
 #contains the sets of labels being used.
 label_sets = list(sorted(set(label)))
 #2-d array containing list of start and end index of the label_sets in the label
@@ -121,14 +88,36 @@ label_sets = list(sorted(set(label)))
 #columns : [name, start_index, end_index]
 label_start_end_indicies = [ [label_set, np.where(label == label_set)[0][0], np.where(label == label_set)[0][-1]] for label_set in label_sets  ]
 
-
+# filtering the data
 for i in range(data.shape[0]):
 	for j in range(data[i].shape[-1]):
 		data[i][:,j] = filter_data(data[i][:,j])
+data = np.array(data)
+
+# #aile plot ko lai
+# for i in range(10):
+# 	for j in range(data[i].shape[-1]):
+# 		data[i][:,j] = filter_data(data[i][:,j])
+# test = np.array(data)
+
+
+# plt.subplot(2, 1, 1)
+# plt.plot(test[0][:, 0])
+# plt.title("Raw Signal")
+# plt.ylabel("Amplitude")
+# gmf = get_emg_features(test[0])
+# plt.subplot(2, 1, 2)
+# plt.plot(gmf[:, 0])
+# plt.title("Double Nine Point Average")
+# plt.xlabel("Samples")
+# plt.ylabel("Amplitude")
+# plt.show()
+
+
 
 # zero padding 
 temp = []
-maximum_length = max(list(map(len, data)))
+maximum_length = 900 	#max(list(map(len, data)))
 print("the maximum_length is : ", maximum_length)
 for i in range(len(data)):
 	pad_width = maximum_length - len(data[i])
@@ -137,10 +126,26 @@ for i in range(len(data)):
 	temp.append(np.pad(data[i], ((pad_before_n, pad_after_n), (0, 0)) , constant_values = (0.0, 0.0)))
 data = np.array(temp)
 
+# Feature extraction
+temp = []
+for i in range(len(data)):
+	temp.append(get_emg_features(data[i]))
 
+a = np.array(temp)
+
+di = { 'data' : a , 'label' : label}
+print(di.keys)
+
+pickle.dump(di , open('ALL_feature_temporal_me.pickle', 'wb'))
+'''
+# b = np.zeros(a.shape[0], a.shape[1], a.shape[2]/8, 8)
+# for i in range(a.shape[0]):
+# 	for j in range( a.shape[2]/8):
+# 		for k in range(8):
+# 			b[i, :, , k] = a[i, :, j*k]
 # graphit(data[0])
 
-
+# TRAINING MODEL
 from sklearn.preprocessing import LabelEncoder
 labelencoder_y = LabelEncoder()
 label = labelencoder_y.fit_transform(label)
@@ -159,8 +164,20 @@ def train_test_split(X, Y, verbose = False):
 
 X_train, Y_train, X_test, Y_test = train_test_split(data, label)
 
+Y_train_unencoded = Y_train
+Y_test_unencoded = Y_test
+
 print("X_train.shape", X_train.shape)
 print("X_train.shape[]", X_train[0].shape)
+
+from sklearn.metrics import confusion_matrix
+def confusion_matrix_plt(y_value , pred_value, labels):
+	print(y_value)
+	print(pred_value)
+	plt.matshow(confusion_matrix(y_value, pred_value,  normalize = 'true'), cmap = 'gray')
+	plt.xticks(range(0, len(labels)), labels)
+	plt.yticks(range(0, len(labels)), labels)
+	plt.show()
 
 #training model
 #1D-cnn
@@ -183,12 +200,13 @@ def CNN_Classifier(X_train, Y_train, X_test, Y_test):
 	CNN_model.compile(optimizer = opt, loss = keras.losses.categorical_crossentropy, metrics=['accuracy'])
 	print(CNN_model.summary())
 
-	history = CNN_model.fit(X_train, Y_train, epochs = 15, batch_size = 50, validation_data =(X_test, Y_test) ,verbose = 1)
+	history = CNN_model.fit(X_train, Y_train, epochs = 5, batch_size = 50, validation_data =(X_test, Y_test) ,verbose = 1)
 
-	CNN_prediction = CNN_model.predict_classes(X_train)
-	
-	#save model
-	CNN_model.save('model_CNN_SR_Mo_raw')
+	CNN_prediction = CNN_model.predict_classes(X_test)
+	print(CNN_prediction)
+	confusion_matrix_plt(Y_test_unencoded, CNN_prediction, label_sets)
+	# save model
+	CNN_model.save('model_CNN_SR_Mo_rawadsf')
 
 	# max_val_acc = max(history.history['accuracy'])
 	# print(max_val_acc) #['loss', 'acc']
@@ -197,13 +215,13 @@ def CNN_Classifier(X_train, Y_train, X_test, Y_test):
 	plt.plot(history.history['acc'])
 	plt.plot(history.history['val_acc'])
 	plt.title('model acc')
-	plt.legend([ 'validation_acc','training_acc'])
+	plt.legend([ 'training_acc', 'validation_acc'])
 	plt.ylabel('accuracy')
 	plt.xlabel('epoch')
 	plt.show()
 	plt.plot(history.history['loss'])
 	plt.plot(history.history['val_loss'])
-	plt.legend([ 'validation_loss' ,'training_loss'])
+	plt.legend([ 'training_loss', 'validation_loss'])
 	plt.ylabel('loss')
 	plt.xlabel('epoch')
 	plt.show()
@@ -211,6 +229,52 @@ def CNN_Classifier(X_train, Y_train, X_test, Y_test):
 	return CNN_model.evaluate(X_test, Y_test)[1]
 
 print("CNN :",CNN_Classifier(X_train, Y_train, X_test, Y_test))
+
+def CNN_2d_Classifier(X_train, Y_train, X_test, Y_test):
+	Y_train = tf.keras.utils.to_categorical(Y_train, num_classes = num_label)
+	Y_test = tf.keras.utils.to_categorical(Y_test, num_classes = num_label)
+	CNN_model = keras.Sequential()
+	CNN_model.add(keras.layers.Conv2D(100, kernel_size = (12, 12), input_shape = X_train.shape[1:], activation = "relu"))
+	CNN_model.add(keras.layers.MaxPool2D(pool_size=(2, 2) ))
+	CNN_model.add(keras.layers.Conv2D(100,kernel_size=(6, 6 ),activation="relu"))
+	CNN_model.add(keras.layers.MaxPool1D(pool_size=(2,2) ))
+	CNN_model.add(keras.layers.Flatten())
+	CNN_model.add(keras.layers.Dense(100,activation="relu"))
+	CNN_model.add(keras.layers.Dense(num_label,activation="softmax"))
+
+	opt = keras.optimizers.Adam(lr = 0.0001)
+
+	CNN_model.compile(optimizer = opt, loss = keras.losses.categorical_crossentropy, metrics=['accuracy'])
+	print(CNN_model.summary())
+
+	history = CNN_model.fit(X_train, Y_train, epochs = 15, batch_size = 50, validation_data =(X_test, Y_test) ,verbose = 1)
+
+	CNN_prediction = CNN_model.predict_classes(X_train)
+	
+	confusion_matrix_plt(Y_test, CNN_prediction, label_sets)
+
+	#save model
+	CNN_model.save('hh')
+
+	# max_val_acc = max(history.history['accuracy'])
+	# print(max_val_acc) #['loss', 'acc']
+
+	print(list(history.history.keys()))
+	plt.plot(history.history['acc'])
+	plt.plot(history.history['val_acc'])
+	plt.title('model acc')
+	plt.legend([ 'training_acc','validation_acc'])
+	plt.ylabel('accuracy')
+	plt.xlabel('epoch')
+	plt.show()
+	plt.plot(history.history['loss'])
+	plt.plot(history.history['val_loss'])
+	plt.legend(['training_loss','validation_loss'])
+	plt.ylabel('loss')
+	plt.xlabel('epoch')
+	plt.show()
+
+	return CNN_model.evaluate(X_test, Y_test)[1]
 
 # TODO 
 #feature extraction
@@ -221,7 +285,6 @@ print("CNN :",CNN_Classifier(X_train, Y_train, X_test, Y_test))
 # model = keras.models.load_model('model')
 # checkresults = check_pickle('~/Document/OpenBCI_GUI/Recordings', file_extension = '*.txt')
 
-
 #'''
 
 '''
@@ -229,9 +292,6 @@ source :
 https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html
 https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.iirnotch.html
 https://www.codegrepper.com/code-examples/python/moving+average+filter+in+python
-
-'''
-
 https://machinelearningmastery.com/save-load-machine-learning-models-python-scikit-learn/
 https://www.tensorflow.org/guide/keras/save_and_serialize
 '''
