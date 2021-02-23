@@ -152,8 +152,8 @@ def double_average(x):
 def get_emg_features(emg_data, debug= False):
 	# xs = emg_data - emg_data.mean(axis=0, keepdims = True)
 	frame_feature = []
-	for i in range(emg_data.shape[1]):
-		x = xs[:,i]
+	for i in range(emg_data.shape[-1]):
+		x = emg_data[:,i]
 		# print("raw value x.shape ",x.shape)
 		w = double_average(x)
 		# print("double average w.shape ",w.shape)
