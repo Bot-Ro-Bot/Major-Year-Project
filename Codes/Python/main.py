@@ -33,7 +33,7 @@ checkresults = check_pickle(root+'dataset/[R|S|U]*/')
 	# extractSegInPickle(root+'dataset/*/*/', channels = range(0, 8), surrounding=210)
 
 #use  unix glob patterns to import the pickle data and label
-data, label = loadSegOfPickle(root+'dataset/[R|S|U]*/me*/')
+data, label = loadSegOfPickle(root+'dataset/US/mo*/')
 
 '''
 #data[data_number][sample_number, Channel_number]
@@ -77,7 +77,7 @@ def drop_data(X,Y,MIN=100,MAX=900):
         index.append(i)
     return [X[n] for n in index],[Y[n] for n in index]
 
-data, label = drop_data(data, label)
+# data, label = drop_data(data, label)
 
 data = np.array(data)
 label = np.array(label)
@@ -133,16 +133,18 @@ for i in range(len(data)):
 
 a = np.array(temp)
 
-di = { 'data' : a , 'label' : label}
-print(di.keys)
+# di = { 'data' : a , 'label' : label}
+# print(di.keys)
 
-pickle.dump(di , open('ALL_feature_temporal_me.pickle', 'wb'))
-'''
-# b = np.zeros(a.shape[0], a.shape[1], a.shape[2]/8, 8)
-# for i in range(a.shape[0]):
-# 	for j in range( a.shape[2]/8):
-# 		for k in range(8):
-# 			b[i, :, , k] = a[i, :, j*k]
+# pickle.dump(di , open('ALL_feature_temporal_me.pickle', 'wb'))
+
+z = np.zeros((a.shape[0], a.shape[1], int(a.shape[-1]/8), 8))
+for i in range(a.shape[0]):
+	for j in range( z.shape[-1]):
+		for k in range(z.shape[-2]):
+			z[i, :,k, j] = a[i, :, z.shape[-2] * j + k]
+
+
 # graphit(data[0])
 
 # TRAINING MODEL
@@ -162,7 +164,7 @@ def train_test_split(X, Y, verbose = False):
 		print("test set shape: 	", X[test_id].shape)
 	return 	X[train_id], Y[train_id], X[test_id], Y[test_id]
 
-X_train, Y_train, X_test, Y_test = train_test_split(data, label)
+X_train, Y_train, X_test, Y_test = train_test_split(z, label)
 
 Y_train_unencoded = Y_train
 Y_test_unencoded = Y_test
@@ -228,16 +230,16 @@ def CNN_Classifier(X_train, Y_train, X_test, Y_test):
 
 	return CNN_model.evaluate(X_test, Y_test)[1]
 
-print("CNN :",CNN_Classifier(X_train, Y_train, X_test, Y_test))
+# print("CNN :",CNN_Classifier(X_train, Y_train, X_test, Y_test))
 
 def CNN_2d_Classifier(X_train, Y_train, X_test, Y_test):
 	Y_train = tf.keras.utils.to_categorical(Y_train, num_classes = num_label)
 	Y_test = tf.keras.utils.to_categorical(Y_test, num_classes = num_label)
 	CNN_model = keras.Sequential()
-	CNN_model.add(keras.layers.Conv2D(100, kernel_size = (12, 12), input_shape = X_train.shape[1:], activation = "relu"))
+	CNN_model.add(keras.layers.Conv2D(100, kernel_size = (4, 4), input_shape = X_train.shape[1:], activation = "relu"))
 	CNN_model.add(keras.layers.MaxPool2D(pool_size=(2, 2) ))
-	CNN_model.add(keras.layers.Conv2D(100,kernel_size=(6, 6 ),activation="relu"))
-	CNN_model.add(keras.layers.MaxPool1D(pool_size=(2,2) ))
+	CNN_model.add(keras.layers.Conv2D(100,kernel_size=(2, 2 ),activation="relu"))
+	CNN_model.add(keras.layers.MaxPool2D(pool_size=(1,1) ))
 	CNN_model.add(keras.layers.Flatten())
 	CNN_model.add(keras.layers.Dense(100,activation="relu"))
 	CNN_model.add(keras.layers.Dense(num_label,activation="softmax"))
@@ -276,6 +278,10 @@ def CNN_2d_Classifier(X_train, Y_train, X_test, Y_test):
 
 	return CNN_model.evaluate(X_test, Y_test)[1]
 
+
+print("CNN :",CNN_2d_Classifier(X_train, Y_train, X_test, Y_test))
+
+
 # TODO 
 #feature extraction
 #use the model made
@@ -285,7 +291,7 @@ def CNN_2d_Classifier(X_train, Y_train, X_test, Y_test):
 # model = keras.models.load_model('model')
 # checkresults = check_pickle('~/Document/OpenBCI_GUI/Recordings', file_extension = '*.txt')
 
-#'''
+#
 
 '''
 source :

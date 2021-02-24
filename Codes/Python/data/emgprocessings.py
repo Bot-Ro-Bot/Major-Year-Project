@@ -210,7 +210,7 @@ def get_emg_features(emg_data, debug= False):
 			plt.show()
 
 		frame_feature.append(np.stack([w_h, p_w, p_r, z_p, r_h], axis= 1))
-		frame_feature.append(s.T)
+		# frame_feature.append(s.T)
 
 	frame_feature = np.concatenate(frame_feature, axis= 1)
 	return frame_feature.astype(np.float32)	
