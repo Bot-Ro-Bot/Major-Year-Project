@@ -15,7 +15,7 @@ def filter_data(data, dataplot= False,  filter_response_plot = False, sampling_f
 	#applying high pass filter - 0.5, used to remove frequencies lower than 0.5Hz
 	filter_order = 1
 	# critical_frequencies = [15, 50] #in Hz
-	critical_frequency = 0.5 	# in Hz
+	critical_frequency = 1.5 	# in Hz
 	FILTER = 'highpass'				#'bandpass'
 	output = 'sos'
 	#design butterworth bandpass filter
@@ -76,14 +76,14 @@ def filter_data(data, dataplot= False,  filter_response_plot = False, sampling_f
 		plt.show()
 
 
-	#applying bandpass filter, 0.5 - 8 Hz
+	#applying lowpass filter, 0.5 - 8 Hz
 	filter_order = 1
 	# critical_frequencies = [15, 50] #in Hz
-	critical_frequencies = [0.5, 8] 	# in Hz
-	FILTER = 'bandpass'				#'bandpass'
+	critical_frequencies = 50 	# in Hz
+	FILTER = 'lowpass'				#'bandpass'
 	output = 'sos'
 
-	#design butterworth bandpass filter
+	#design butterworth lowpass filter
 	sos = signal.butter(filter_order, critical_frequencies, FILTER, fs = sampling_frequency, output= output)
 	filtered = signal.sosfilt(sos, data)
 
@@ -102,7 +102,6 @@ def filter_data(data, dataplot= False,  filter_response_plot = False, sampling_f
 			plt.axvline(freq, color = 'green')
 		plt.show()
 	
-	#TODO: removing heartbeat artifacts...
 	#applying ricker
 	ricker_width = 35 * sampling_frequency // 250
 	ricker_sigma = 4.0 * sampling_frequency / 250 #4.0...
@@ -157,30 +156,37 @@ def get_emg_features(emg_data, debug= False):
 		# print("raw value x.shape ",x.shape)
 		w = double_average(x)
 		# print("double average w.shape ",w.shape)
-		p = x - w
+		p = x - w 
 		# print("p.shape ",p.shape)
-		r = np.abs(p)
+		r = np.abs(p) #rectified high frequency signal
 		# print("r.shape ",r.shape)
-
-		w_h = librosa.util.frame(w, frame_length= 16, hop_length= 6).mean(axis= 0)
+		
+		# _
+		# w : frame based time domain mean of double_average
+		w_h = librosa.util.frame(w, frame_length= 16, hop_length= 1).mean(axis= 0)
 		# print("w_h.shape ",w_h.shape)
 		
-		p_w = librosa.feature.rms(w, frame_length= 16, hop_length= 6, center= False)
+		#Pw - frame based power
+		p_w = librosa.feature.rms(w, frame_length= 16, hop_length= 1, center= False)
 		p_w = np.squeeze(p_w, 0)
 		# print("p_w.shape ",p_w.shape)
 
-		p_r = librosa.feature.rms(r, frame_length= 16, hop_length= 6, center= False)
+		#Pr - frame based power of rectified high frequency signal
+		p_r = librosa.feature.rms(r, frame_length= 16, hop_length= 1, center= False)
 		p_r = np.squeeze(p_r, 0)
 		# print("p_r.shape ",p_r.shape)
 		
-		z_p = librosa.feature.zero_crossing_rate(p, frame_length= 16, hop_length= 6, center= False)
+		#zp - frame based zero crossing rate
+		z_p = librosa.feature.zero_crossing_rate(p, frame_length= 16, hop_length= 1, center= False)
 		z_p = np.squeeze(z_p, 0)
 		# print("zero crossing z_p.shape ",z_p.shape)
 		
-		r_h = librosa.util.frame(r, frame_length= 16, hop_length= 6).mean(axis= 0)
+		# _
+		# r : frame based time domain mean of rectified high frequency signal
+		r_h = librosa.util.frame(r, frame_length= 16, hop_length= 1).mean(axis= 0)
 		# print("recrifie high frequecy r_h.shape ",r_h.shape)
 
-		s = abs(librosa.stft(np.ascontiguousarray(x), n_fft= 16, hop_length= 6, center= False))
+		s = abs(librosa.stft(np.ascontiguousarray(x), n_fft= 16, hop_length= 1, center= False))
 		# print("short time fourirer transform s.shape ",s.shape)
 
 		if 	debug:
@@ -198,12 +204,13 @@ def get_emg_features(emg_data, debug= False):
 			plt.plot(r_h)
 			
 			plt.subplot(7, 1, 7)
-			plt.imshow(s, origin='lower', aspect= 'auto', interpolation= 'nearest')
 
+			plt.imshow(s, origin='lower', aspect= 'auto', interpolation= 'nearest')
+			plt.tight_layout()
 			plt.show()
 
 		frame_feature.append(np.stack([w_h, p_w, p_r, z_p, r_h], axis= 1))
-		frame_feature.append(s.T)
+		# frame_feature.append(s.T)
 
 	frame_feature = np.concatenate(frame_feature, axis= 1)
 	return frame_feature.astype(np.float32)	
@@ -231,3 +238,39 @@ def similarity(sig1, sig2):
 https://stackoverflow.com/questions/33383650/using-cross-correlation-to-detect-an-audio-signal-within-another-signal
 '''
 # END OF METHODS FOR STATS 
+
+# import matplotlib.pyplot as plt 
+#method to print the channel in subplots, just pass the data[X] or data[X][:, X:Y]
+def graphit(arr, title = 0, saveplot = False):
+	fig, axes = plt.subplots(arr.shape[-1], sharex = True, sharey= True)
+	fig.text(0.5,0.02,'Samples', ha = 'center')
+	fig.text(0.02,0.5,'Amplitude', va = 'center', rotation= 'vertical')
+	# fig.suptitle(title)
+
+	fig.tight_layout()
+	for i in range(arr.shape[-1]):
+		axes[i].title.set_text('Channel '+ str(i+ title +1))
+		axes[i].plot(arr[:,i])
+	if not saveplot:
+		plt.show()
+	else :
+		plt.savefig(title+'.png')
+
+#for fft
+from scipy.fft import fft, fftfreq
+def fftplot(data_x):
+	N = len(data_x)
+	T = 1.0 / fs
+	yf = fft(data_x)
+	xf = fftfreq(N, T)[:,N//2]
+	plt.plot(xf, 2.0/N * np.abs(yf[0:N//2]))
+	plt.grid()
+	plt.show()
+
+def running_mean(x, N):
+	'''
+	x array of data
+	N number of samples per average
+	'''
+	cumsum = np.cumsum(np.insert(x, 0 , 0))
+	return (cumsum[N:] - cumsum[:-N]) / float(N)
