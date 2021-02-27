@@ -76,14 +76,15 @@ def filter_data(data, dataplot= False,  filter_response_plot = False, sampling_f
 		plt.show()
 
 
-	#applying bandpass filter, 0.5 - 8 Hz
+	#applying lowpass filter, 0.5 - 8 Hz
 	filter_order = 1
 	# critical_frequencies = [15, 50] #in Hz
-	critical_frequencies = 8	# in Hz
+
+	critical_frequencies = 50 	# in Hz
 	FILTER = 'lowpass'				#'bandpass'
 	output = 'sos'
 
-	#design butterworth bandpass filter
+	#design butterworth lowpass filter
 	sos = signal.butter(filter_order, critical_frequencies, FILTER, fs = sampling_frequency, output= output)
 	filtered = signal.sosfilt(sos, data)
 
@@ -231,12 +232,9 @@ def similarity(sig1, sig2):
 https://stackoverflow.com/questions/33383650/using-cross-correlation-to-detect-an-audio-signal-within-another-signal
 '''
 # END OF METHODS FOR STATS 
-<<<<<<< HEAD
-
-#methods to make some task easy like plots.
 # import matplotlib.pyplot as plt 
 #method to print the channel in subplots, just pass the data[X] or data[X][:, X:Y]
-def graphit(arr, title = 0, saveplot = 0):
+def graphit(arr, title = 0, saveplot = False):
 	fig, axes = plt.subplots(arr.shape[-1], sharex = True, sharey= True)
 	fig.text(0.5,0.02,'Samples', ha = 'center')
 	fig.text(0.02,0.5,'Amplitude', va = 'center', rotation= 'vertical')
@@ -270,5 +268,3 @@ def running_mean(x, N):
 	'''
 	cumsum = np.cumsum(np.insert(x, 0 , 0))
 	return (cumsum[N:] - cumsum[:-N]) / float(N)
-=======
->>>>>>> 99afa5b46996369596e31560b9f65142c0df6e7e
