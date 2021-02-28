@@ -76,11 +76,10 @@ def filter_data(data, dataplot= False,  filter_response_plot = False, sampling_f
 		plt.show()
 
 
-	#applying lowpass filter, 0.5 - 8 Hz
+	#applying lowpass filter  50 Hz
 	filter_order = 1
-	# critical_frequencies = [15, 50] #in Hz
-
-	critical_frequencies = 50 	# in Hz
+	# critical_frequencies = [15, 50] #in Hz for bandpass 
+	critical_frequencies = 50	# in Hz
 	FILTER = 'lowpass'				#'bandpass'
 	output = 'sos'
 
@@ -88,7 +87,7 @@ def filter_data(data, dataplot= False,  filter_response_plot = False, sampling_f
 	sos = signal.butter(filter_order, critical_frequencies, FILTER, fs = sampling_frequency, output= output)
 	filtered = signal.sosfilt(sos, data)
 
-	#response of the high pass filter
+	#response of the lowpass filter
 	if(filter_response_plot):
 		output = 'ba'
 		b, a = signal.butter(filter_order, critical_frequencies, FILTER, fs = sampling_frequency, output= output)
@@ -232,9 +231,11 @@ def similarity(sig1, sig2):
 https://stackoverflow.com/questions/33383650/using-cross-correlation-to-detect-an-audio-signal-within-another-signal
 '''
 # END OF METHODS FOR STATS 
+
+#methods to make some task easy like plots.
 # import matplotlib.pyplot as plt 
 #method to print the channel in subplots, just pass the data[X] or data[X][:, X:Y]
-def graphit(arr, title = 0, saveplot = False):
+def graphit(arr, title = 0, saveplot = 0):
 	fig, axes = plt.subplots(arr.shape[-1], sharex = True, sharey= True)
 	fig.text(0.5,0.02,'Samples', ha = 'center')
 	fig.text(0.02,0.5,'Amplitude', va = 'center', rotation= 'vertical')
