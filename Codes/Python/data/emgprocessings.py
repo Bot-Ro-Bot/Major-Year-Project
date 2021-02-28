@@ -2,6 +2,7 @@
 
 import numpy as np 
 import librosa 
+import librosa.display
 import matplotlib.pyplot as plt 
 from scipy import signal
 
@@ -9,8 +10,7 @@ from scipy import signal
 def filter_data(data, dataplot= False,  filter_response_plot = False, sampling_frequency = 250):
 	#this follows the arnav process
 	#signal processing
-	#	- hpf, notch filter (50 Hz) x 3 with harmonics, bpf  
-
+	#	- hpf, notch filter (50 Hz) x 3 with harmonics, lpf  
 
 	#applying high pass filter - 0.5, used to remove frequencies lower than 0.5Hz
 	filter_order = 1
@@ -79,6 +79,7 @@ def filter_data(data, dataplot= False,  filter_response_plot = False, sampling_f
 	#applying lowpass filter, 0.5 - 8 Hz
 	filter_order = 1
 	# critical_frequencies = [15, 50] #in Hz
+
 	critical_frequencies = 50 	# in Hz
 	FILTER = 'lowpass'				#'bandpass'
 	output = 'sos'
@@ -113,18 +114,9 @@ def filter_data(data, dataplot= False,  filter_response_plot = False, sampling_f
 	#remove the heart beat artifacts from the original signal
 	filtered = filtered - 2*convolution
 	
-	# # print(type(convolution))
-	# for i in range(8):
-	# 	convolution = signal.convolve(zscore(sample[i]),ricker,mode="same")	
-	# 	abc = zscore(sample[i]) - 2*convolution
-	# 	# plt.plot(convolution)
-	# 	# plt.plot(abc)
-	# 	plt.plot(zscore(sample[i]))
-	# 	# plt.plot(abc)
-	# # plt.plot(filtered)
-	# # plt.plot(zscore(sample[0]))
-	# # plt.legend(["ricker","original"])
-	# plt.show()	
+	if(filter_response_plot):
+		plt.plot(convolution)
+		plt.show()	
 
 	return filtered
 # END OF METHODS FOR FEATURES
@@ -191,26 +183,28 @@ def get_emg_features(emg_data, debug= False):
 
 		if 	debug:
 			plt.subplot(7, 1, 1)
-			plt.plot(x)
+			plt.plot(x)				#plots the filtered signal 
 			plt.subplot(7, 1, 2)
-			plt.plot(w_h)
+			plt.plot(w_h)			#plots the frame based	time domain mean of double_average
 			plt.subplot(7, 1, 3)
-			plt.plot(p_w)
+			plt.plot(p_w)			#plots the frame based power
 			plt.subplot(7, 1, 4)
-			plt.plot(p_r)
+			plt.plot(p_r)			#plots the frame based of rectified high frequency signal
 			plt.subplot(7, 1, 5)
-			plt.plot(z_p)
+			plt.plot(z_p)			#plots the frame based zero crossing rate
 			plt.subplot(7, 1, 6)
-			plt.plot(r_h)
+			plt.plot(r_h)			#plots the time domain mean of rectified high frequency signal
 			
-			plt.subplot(7, 1, 7)
-
+			plt.subplot(7, 1, 7)	#plots the spectrogram(?still not sure?) of the stft
 			plt.imshow(s, origin='lower', aspect= 'auto', interpolation= 'nearest')
 			plt.tight_layout()
 			plt.show()
 
+
+		#stacking the temporal features mentioned above.
 		frame_feature.append(np.stack([w_h, p_w, p_r, z_p, r_h], axis= 1))
-		# frame_feature.append(s.T)
+		#stacking the spectral features i.e stft of the signal.
+		frame_feature.append(s.T)
 
 	frame_feature = np.concatenate(frame_feature, axis= 1)
 	return frame_feature.astype(np.float32)	
@@ -238,7 +232,6 @@ def similarity(sig1, sig2):
 https://stackoverflow.com/questions/33383650/using-cross-correlation-to-detect-an-audio-signal-within-another-signal
 '''
 # END OF METHODS FOR STATS 
-
 # import matplotlib.pyplot as plt 
 #method to print the channel in subplots, just pass the data[X] or data[X][:, X:Y]
 def graphit(arr, title = 0, saveplot = False):
@@ -246,24 +239,25 @@ def graphit(arr, title = 0, saveplot = False):
 	fig.text(0.5,0.02,'Samples', ha = 'center')
 	fig.text(0.02,0.5,'Amplitude', va = 'center', rotation= 'vertical')
 	# fig.suptitle(title)
-
 	fig.tight_layout()
 	for i in range(arr.shape[-1]):
 		axes[i].title.set_text('Channel '+ str(i+ title +1))
 		axes[i].plot(arr[:,i])
-	if not saveplot:
+	if saveplot == 0 or saveplot == 2:
 		plt.show()
-	else :
+	elif saveplot == 1 or saveplot == 2:
 		plt.savefig(title+'.png')
 
 #for fft
 from scipy.fft import fft, fftfreq
 def fftplot(data_x):
 	N = len(data_x)
-	T = 1.0 / fs
+	T = 1.0 / 250.0
 	yf = fft(data_x)
-	xf = fftfreq(N, T)[:,N//2]
+	xf = fftfreq(N, T)[:N//2]
 	plt.plot(xf, 2.0/N * np.abs(yf[0:N//2]))
+	plt.xlabel("Frequency")
+	plt.ylabel("Power")
 	plt.grid()
 	plt.show()
 
