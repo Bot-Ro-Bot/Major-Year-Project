@@ -34,7 +34,7 @@ for i in range(instance_data.shape[0]):
 
 # zero padding (and equating the sample size as the trained data size)
 temp = []
-dataset_data_max_len = 935				#maximum data size in the trained data.(TODO : automate this later)
+dataset_data_max_len = 900				#maximum data size in the trained data.(TODO : automate this later)
 maximum_length = dataset_data_max_len	#max(list(map(len, instance_data)))
 print("the maximum_length is : ", maximum_length)
 for i in range(len(instance_data)):

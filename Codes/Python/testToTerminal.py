@@ -28,7 +28,7 @@ for i in range(len(frames)):
 	if speaking and not bool(frames[i][-1]):
 		print('stop speaking')
 		speaking = False
-		if np.all(map(bool, frames[i-50:i, -1])):
+		if np.eall(map(bool, frames[i-50:i, -1])):
 			print(num)
 			num+= 1 
 			sequence_groups[num % num_classes].append(list(frames[start_index- padding: i + padding, channels]))
