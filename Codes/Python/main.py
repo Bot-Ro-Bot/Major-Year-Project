@@ -82,7 +82,6 @@ def drop_data(X,Y,MIN=100,MAX=900):
 
 data = np.array(data)
 label = np.array(label)
-
 #contains the sets of labels being used.
 label_sets = list(sorted(set(label)))
 #2-d array containing list of start and end index of the label_sets in the label
@@ -95,7 +94,6 @@ for i in range(data.shape[0]):
 	for j in range(data[i].shape[-1]):
 		data[i][:,j] = filter_data(data[i][:,j])
 data = np.array(data)
-
 
 # gmf = get_emg_features(data[0], True)
 
@@ -171,7 +169,6 @@ def train_test_split(X, Y, verbose = False):
 	return 	X[train_id], Y[train_id], X[test_id], Y[test_id]
 
 X_train, Y_train, X_test, Y_test = train_test_split(X, Y_encod)
-
 print("X_train.shape", X_train.shape)
 print("X_train.shape[]", X_train[0].shape)
 
@@ -294,7 +291,6 @@ def CNN_2d_Classifier(X_train, Y_train, X_test, Y_test):
 #???
 
 #'''
-
 '''
 source :
 https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html
@@ -302,4 +298,5 @@ https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.iirnotch.html
 https://www.codegrepper.com/code-examples/python/moving+average+filter+in+python
 https://machinelearningmastery.com/save-load-machine-learning-models-python-scikit-learn/
 https://www.tensorflow.org/guide/keras/save_and_serialize
+'''
 '''
