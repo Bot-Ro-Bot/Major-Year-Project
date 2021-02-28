@@ -6,6 +6,25 @@ from tensorflow import keras
 from data.processing import check_file, extractSeg_from_file
 from data.emgprocessings import filter_data
 
+
+MAIN_DIR = os.path.join(CURR_DIR,"..","..")
+DATA_DIR = os.path.join(MAIN_DIR,"dataset")
+FILE_DIR = os.path.join(MAIN_DIR,"dataset","pickle")
+FIG_DIR = os.path.join(MAIN_DIR,"figures")
+MODELS = os.path.join(MAIN_DIR,"Saved Models")
+
+TEXT_DIR = ""
+cnn_mouth_model = "all_features_all_speakers_mouthed_model_cnn_e15.h5"
+cnn_mental_model = "all_features_all_speakers_mental_model_cnn_e15.h5"
+
+SPEAKER = ["RL","RN","SR","US"]
+MODE = ["mentally","mouthed"]
+WORDS = LABELS = ["add","call","go","later","left","reply","right","stop","subtract","you"]
+
+SAMPLING_FREQ = 250 
+NUM_CHANNELS = 8
+
+
 #method that constantly checks the folder containing the file of Openbci in /home/<user>/Documents/OpenBCI_GUI/Recordings/<file.txt>
 def get_recording_file():
 	checkresults = []
