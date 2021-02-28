@@ -6,6 +6,25 @@ from tensorflow import keras
 from data.processing import check_file, extractSeg_from_file
 from data.emgprocessings import filter_data
 
+
+MAIN_DIR = os.path.join(CURR_DIR,"..","..")
+DATA_DIR = os.path.join(MAIN_DIR,"dataset")
+FILE_DIR = os.path.join(MAIN_DIR,"dataset","pickle")
+FIG_DIR = os.path.join(MAIN_DIR,"figures")
+MODELS = os.path.join(MAIN_DIR,"Saved Models")
+
+TEXT_DIR = ""
+cnn_mouth_model = "all_features_all_speakers_mouthed_model_cnn_e15.h5"
+cnn_mental_model = "all_features_all_speakers_mental_model_cnn_e15.h5"
+
+SPEAKER = ["RL","RN","SR","US"]
+MODE = ["mentally","mouthed"]
+WORDS = LABELS = ["add","call","go","later","left","reply","right","stop","subtract","you"]
+
+SAMPLING_FREQ = 250 
+NUM_CHANNELS = 8
+
+
 #method that constantly checks the folder containing the file of Openbci in /home/<user>/Documents/OpenBCI_GUI/Recordings/<file.txt>
 def get_recording_file():
 	checkresults = []
@@ -27,11 +46,12 @@ instance_data = np.array(instance_data)
 instance_label= np.array(instance_label)
 print(instance_data.shape)
 
-#passing the data to filter...
+#filtering the data.
 for i in range(instance_data.shape[0]):
 	for j in range(instance_data[i].shape[-1]):
 		instance_data[i][:,j] = filter_data(instance_data[i][:,j])
 
+#length normalization 
 # zero padding (and equating the sample size as the trained data size)
 temp = []
 dataset_data_max_len = 900				#maximum data size in the trained data.(TODO : automate this later)
@@ -44,15 +64,29 @@ for i in range(len(instance_data)):
 		# data[i] = np.pad(data[i], ((pad_before_n, pad_after_n), (0, 0)) , constant_values = (0.0, 0.0))
 		temp.append(np.pad(instance_data[i], ((pad_before_n, pad_after_n), (0, 0)) , constant_values = (0.0, 0.0)))
 	else : 	#take the first to the dataset_data_max_len of the uttered data.. (need further more methods...)
-		temp.append(instance_data[i][:dataset_data_max_len])
+		trim_width = len(instance_data[i]) - maximum_length 
+		temp.append(instance_data[i][ int(np.floor(trim_width/2)) :  -1 * int(np.ceil(trim_width/2))])
 instance_data = np.array(temp)
+
+# Feature extraction
+temp = []
+for i in range(len(instance_data)):
+	temp.append(get_emg_features(instance_data[i]))
+data_feat = np.array(temp)
+
+X= data_feat 	#just for naming
+
+#scaling data
+from sklearn.preprocesing import StandardScaler
+scalar = StandardScaler()
+X = (scalar.fit_transform(X.reshape(X.shape[0], -1), Y)).reshape(X.shape[0], X.shape[1], -1)
 
 dataset_labels = ['add', 'call', 'go', 'later', 'left',
 					'reply', 'right', 'stop', 'subtract', 'you']
 
 #pass the extracted points to the trained model
-model_prediction = model.predict_classes(instance_data)
+model_predictions = model.predict_classes(X)
 #predict and display the articulation.
-print([dataset_labels[i] for i in model_prediction])
-print(len(model_prediction))
+print([dataset_labels[model_prediction] for model_prediction in model_predictions])
+print(len(model_predictions))
 #'''
