@@ -303,34 +303,3 @@ https://www.codegrepper.com/code-examples/python/moving+average+filter+in+python
 https://machinelearningmastery.com/save-load-machine-learning-models-python-scikit-learn/
 https://www.tensorflow.org/guide/keras/save_and_serialize
 '''
-
-'''
-input  = 885x112
-
-Model: "sequential"
-_________________________________________________________________
-Layer (type)                 Output Shape              Param #   
-=================================================================
-conv1d (Conv1D)              (None, 874, 100)          134500    
-_________________________________________________________________
-max_pooling1d (MaxPooling1D) (None, 437, 100)          0         
-_________________________________________________________________
-conv1d_1 (Conv1D)            (None, 432, 100)          60100     
-_________________________________________________________________
-max_pooling1d_1 (MaxPooling1 (None, 216, 100)          0         
-_________________________________________________________________
-flatten (Flatten)            (None, 21600)             0         
-_________________________________________________________________
-dense (Dense)                (None, 100)               2160100   
-_________________________________________________________________
-dense_1 (Dense)              (None, 10)                1010      
-=================================================================
-Total params: 2,355,710
-Trainable params: 2,355,710
-Non-trainable params: 0
-
-
-
-
-The architecture of designed CNN is as shown in the figure 8-21. The size of the input tensor was 1x200. The first hidden layer was a 1-dimensional convolution layer (Conv1D 1) with ReLU activation function. It consisted of 100 filters and a kernel/filter of size 3. It convoluted the data resulting output of size 100x198 which was then pooled with 1-dimensional max-pool layer (MaxPool-1D 1) with kernel size of 2. It resulted in a tensor of size 100x99. The data was again fed to Conv1D 2 with the same number of filters and same kernel size with ReLU activation function that resulted in the output of shape 100x97. This layer was then fed to MaxPool-1D 2 layer with the same properties as that of Maxpool-1D 1. The tensor size output from this layer was 100x48. The data was then flattened to one dimensional tensor of size 4800 using a Flatten layer. The next hidden layer was H1 with the number of nodes being 100. The final layer was the output layer with a resulting tensor size of 10 which was mapped from the hidden layer H1 using softmax regression. All the hidden layers along with the output layer beyond the Flatten layer were fully connected.
-'''

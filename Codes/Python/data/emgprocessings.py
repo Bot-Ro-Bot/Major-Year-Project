@@ -231,7 +231,6 @@ def similarity(sig1, sig2):
 https://stackoverflow.com/questions/33383650/using-cross-correlation-to-detect-an-audio-signal-within-another-signal
 '''
 # END OF METHODS FOR STATS 
-<<<<<<< HEAD
 
 #methods to make some task easy like plots.
 # import matplotlib.pyplot as plt 
@@ -270,5 +269,3 @@ def running_mean(x, N):
 	'''
 	cumsum = np.cumsum(np.insert(x, 0 , 0))
 	return (cumsum[N:] - cumsum[:-N]) / float(N)
-=======
->>>>>>> 99afa5b46996369596e31560b9f65142c0df6e7e
