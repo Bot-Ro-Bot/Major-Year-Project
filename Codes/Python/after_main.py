@@ -2,10 +2,16 @@
 #run this script to after saving the trained model.
 import tensorflow as tf 
 import numpy as np
-from tensorflow import keras
-from data.processing import check_file, extractSeg_from_file
-from data.emgprocessings import filter_data
+import matplotlib.pyplot as plt
 
+from tensorflow import keras
+from data.processing import *
+from data.emgprocessings import *
+import os 
+import sys
+import pickle
+
+CURR_DIR = os.getcwd()
 
 MAIN_DIR = os.path.join(CURR_DIR,"..","..")
 DATA_DIR = os.path.join(MAIN_DIR,"dataset")
@@ -24,7 +30,6 @@ WORDS = LABELS = ["add","call","go","later","left","reply","right","stop","subtr
 SAMPLING_FREQ = 250 
 NUM_CHANNELS = 8
 
-
 #method that constantly checks the folder containing the file of Openbci in /home/<user>/Documents/OpenBCI_GUI/Recordings/<file.txt>
 def get_recording_file():
 	checkresults = []
@@ -37,10 +42,15 @@ def get_recording_file():
 model = keras.models.load_model('model')
 
 #checking for the file from openbci.
-rec_file= get_recording_file()
-print(rec_file)
+# rec_file= get_recording_file()
+# print(rec_file)
 # extract data points from the file
-instance_data, instance_label =  extractSeg_from_file(rec_file[0])
+# instance_data, instance_label =  extractSeg_from_file(rec_file[0])
+
+#checking for the file from pickel
+di = pickle.load(open('us_test_term_mo.pickle','rb'))
+instance_data = di['data'] 
+instance_label = di['label']
 
 instance_data = np.array(instance_data)
 instance_label= np.array(instance_label)
@@ -54,7 +64,7 @@ for i in range(instance_data.shape[0]):
 #length normalization 
 # zero padding (and equating the sample size as the trained data size)
 temp = []
-dataset_data_max_len = 900				#maximum data size in the trained data.(TODO : automate this later)
+dataset_data_max_len = 935				#maximum data size in the trained data.(TODO : automate this later)
 maximum_length = dataset_data_max_len	#max(list(map(len, instance_data)))
 print("the maximum_length is : ", maximum_length)
 for i in range(len(instance_data)):
@@ -69,16 +79,17 @@ for i in range(len(instance_data)):
 instance_data = np.array(temp)
 
 # Feature extraction
-temp = []
-for i in range(len(instance_data)):
-	temp.append(get_emg_features(instance_data[i]))
-data_feat = np.array(temp)
+# temp = []
+# for i in range(len(instance_data)):
+# 	temp.append(get_emg_features(instance_data[i]))
+# data_feat = np.array(temp)
 
-X= data_feat 	#just for naming
+X= instance_data 	#just for naming
 
 #scaling data
-from sklearn.preprocesing import StandardScaler
+from sklearn.preprocessing import StandardScaler
 scalar = StandardScaler()
+Y= []
 X = (scalar.fit_transform(X.reshape(X.shape[0], -1), Y)).reshape(X.shape[0], X.shape[1], -1)
 
 dataset_labels = ['add', 'call', 'go', 'later', 'left',
