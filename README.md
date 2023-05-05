@@ -20,3 +20,17 @@ augmentation of both approaches.
 #### Rhimesh Lwagun https://github.com/riderman10000
 #### Sanjay Rijal https://github.com/zovelsanj
 #### Upendra Subedi https://github.com/upendrasubedi
+
+### Citation
+```
+@InProceedings{IOEGC-12-082-12118,
+    author       = {Rhimesh Lwagun and  Sanjay Rijal and  Rabin Nepal and  Upendra Subedi and  Dinesh Baniya Kshatri},
+    title        = {{Silent Speech Recognition in Nepali}},
+    pages        = {628 -- 635},
+    booktitle    = {Proceedings of 12th IOE Graduate Conference},
+    year         = {2022},
+    volume       = {12},
+    month        = {October},
+    organization = {Institute of Engineering, Tribhuvan University, Nepal}
+}
+```
