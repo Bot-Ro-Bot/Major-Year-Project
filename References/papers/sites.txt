@@ -1,0 +1,17 @@
+https://github.com/PIA-Group/BioSPPy
+
+https://code.google.com/archive/p/hmm-speech-recognition/downloads
+
+https://github.com/yashiro32/speech_recognition
+
+https://softwarerecs.stackexchange.com/questions/17124/building-speech-recognition-for-a-new-language-from-scratch
+
+
+https://medium.com/@kangeugine/hidden-markov-model-7681c22f5b9
+
+
+https://kastnerkyle.github.io/posts/single-speaker-word-recognition-with-hidden-markov-models/
+
+https://github.com/jurgenarias/Portfolio/tree/master/Voice%20Classification
+
+
