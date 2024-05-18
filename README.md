@@ -20,6 +20,7 @@ augmentation of both approaches.
 #### Sanjay Rijal https://github.com/zovelsanj
 #### Upendra Subedi https://github.com/upendrasubedi
 
+The full version of the thesis is also publicly available at [ResearchGate](https://www.researchgate.net/publication/380073456_A_Major_Project_Report_On_Human-Computer_Interaction_Using_Neuromuscular_Signals).
 ### Citation
 ```
 @InProceedings{IOEGC-12-082-12118,
